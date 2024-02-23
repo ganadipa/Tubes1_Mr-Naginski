@@ -8,6 +8,7 @@ from game.bot_handler import BotHandler
 from game.logic.random import RandomLogic, Bot1
 from game.util import *
 from game.logic.base import BaseLogic
+from game.logic.naive import NaiveLogic
 
 
 init()
@@ -15,7 +16,8 @@ BASE_URL = "http://localhost:3000/api"
 DEFAULT_BOARD_ID = 1
 CONTROLLERS = {
     "Random": RandomLogic,
-    "gana": Bot1
+    "gana": Bot1,
+    "Naive": NaiveLogic
 }
 
 ###############################################################################

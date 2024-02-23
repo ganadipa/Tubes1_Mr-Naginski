@@ -17,7 +17,8 @@ class Position:
 
 
 @dataclass
-class Base(Position): ...
+class Base(Position):
+    ...
 
 
 @dataclass
