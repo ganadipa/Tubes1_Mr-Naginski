@@ -8,7 +8,7 @@ from game.bot_handler import BotHandler
 from game.logic.random import RandomLogic, Bot1
 from game.util import *
 from game.logic.base import BaseLogic
-from game.logic.naive import NaiveLogic, Naive2Logic
+from game.logic.naive import NaiveLogic, Naive2Logic, Naive3Logic
 
 
 init()
@@ -18,7 +18,8 @@ CONTROLLERS = {
     "Random": RandomLogic,
     "gana": Bot1,
     "Naive": NaiveLogic,
-    "Naive2": Naive2Logic
+    "Naive2": Naive2Logic,
+    "Naive3": Naive3Logic
 }
 
 ###############################################################################
