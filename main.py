@@ -8,18 +8,29 @@ from game.bot_handler import BotHandler
 from game.logic.random import RandomLogic, Bot1
 from game.util import *
 from game.logic.base import BaseLogic
-from game.logic.naive import NaiveLogic, Naive2Logic, Naive3Logic
+from game.logic.naive import NaiveLogic, Naive2Logic, Naive3Logic, Naive4Logic
+from game.logic.kodok_ganteng import KodokGanteng
+from game.logic.kodok_tua import KodokTua
+from game.logic.kodok_putih import KodokPutih
+
+from game.logic.weighted_area import WeightedArea
 
 
 init()
 BASE_URL = "http://localhost:3000/api"
+# BASE_URL = "http://10.5.108.251:3000/api"
 DEFAULT_BOARD_ID = 1
 CONTROLLERS = {
     "Random": RandomLogic,
     "gana": Bot1,
     "Naive": NaiveLogic,
     "Naive2": Naive2Logic,
-    "Naive3": Naive3Logic
+    "Naive3": Naive3Logic,
+    "Naive4": Naive4Logic,
+    "Kodok": KodokGanteng,
+    "Area": WeightedArea,
+    "Tua": KodokTua,
+    "Putih": KodokPutih
 }
 
 ###############################################################################
