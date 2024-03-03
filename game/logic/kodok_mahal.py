@@ -4,20 +4,23 @@ from typing import Optional, Tuple
 from game.logic.base import BaseLogic
 from game.models import GameObject, Board, Position
 
-class KodokSehat(BaseLogic):
+class KodokMahal(BaseLogic):
     """
-    Like KodokGanteng, but with extra strategy.
-    Instead of ignorign every diamond that's nearest to the enemy, it will still choose the nearest diamond to that enemy if that diamond is closer to this bot.
+    Like KodokGanteng, but also like KodokSehat.
     It will try to make the bot to go to base if have diamond before the time is up.
-    If there's a base nearby (radius <= 2) but the base is not in the path to the diamond we're trying to reach, and the diamond in inventory is more than 0, always go to base. Because getting stepped on is brutal
+    If there's a base nearby (radius <= 1) but the base is not in the path to the diamond we're trying to reach, and the diamond in inventory is more than 0, always go to base. Because getting stepped on is brutal
     """
     def __init__(self):
         pass
 
+    def is_diamond_almost_full(self, bot: GameObject) -> bool:
+        return bot.properties.diamonds >= bot.properties.inventory_size-1
+    def is_diamond_full(self, bot: GameObject) -> bool:
+        return bot.properties.diamonds == bot.properties.inventory_size
     def next_move(self, board_bot: GameObject, board: Board) -> Tuple[int, int]:
         # try:
             # case diamond almost full
-            if board_bot.properties.diamonds >= board_bot.properties.inventory_size-1:
+            if self.is_diamond_almost_full(board_bot):
                 return self.move_towards_base(board_bot, board)
             
             # case time is almost up and have diamond
@@ -27,7 +30,6 @@ class KodokSehat(BaseLogic):
             # case base in radius 1 and have diamond
             if board_bot.properties.diamonds > 0 and self.is_base_near(board_bot, board):
                 return self.move_towards(board_bot, board_bot.properties.base)
-            
             
             # Move to nearest diamond
             target_pos = self.find_best_next_move(board_bot, board)
@@ -44,6 +46,7 @@ class KodokSehat(BaseLogic):
         return teleporters[0], teleporters[1]
 
     # Move towards base, also handle teleport
+    # also handle if there's diamond in the way, go to the diamond first
     def move_towards_base(self, board_bot: GameObject, board: Board) -> Tuple[int, int]:
         teleporter1, teleporter2 = self.get_both_teleporter(board)
         current_position = board_bot.position
@@ -66,43 +69,28 @@ class KodokSehat(BaseLogic):
             else:
                 return self.move_towards(board_bot, teleporter2.position)
         else:
+
             return self.move_towards(board_bot, base_position)
     # The solution itself
     def find_best_next_move(self, my_bot: GameObject, board: Board) -> Position:
         enemy_bot_list = board.bots
         enemy_bot_list.remove(my_bot)
         diamond_list = board.diamonds
-        
-        # case no diamond left, return to base
-        if len(diamond_list) == 0:
-            return my_bot.properties.base
-        
-        # put all nearest diamonds to each enemy bot to a list
-        nearest_diamond_to_enemy_list: list[tuple[GameObject, GameObject]] = list() # (enemy_bot, diamond)
-        for enemy_bot in enemy_bot_list:
-            nearest_diamond_to_enemy_list.append(
-                (enemy_bot, self.find_nearest_diamond_regard_to_teleport(enemy_bot, diamond_list, board))
-            )
 
-        # sort all diamonds based on distance to this bot to a list
-        diamond_list.sort(key=lambda x: self.distance_to_diamond_regard_to_teleport(my_bot, x, board))
-        
-        # for every sorted diamond, check if it's the nearest to any enemy bot
-        # if not, choose the diamond
-        # else, check if this bot is nearer to the diamond than the enemy bot
-        # if yes, choose this diamond
-        # else, pop the diamond from the list, and continue to the next diamond
-        # there's also case where there's 1 diamond that is the nearest to multiple enemy bots
-        for diamond in diamond_list:
-            is_this_bot_nearest = True
-            for enemy_bot, enemy_nearest_diamond in nearest_diamond_to_enemy_list:
-                if diamond == enemy_nearest_diamond:
-                    # +1 because to make sure we dont get stepped on
-                    if self.distance_to_diamond_regard_to_teleport(my_bot, diamond, board)+1 >= self.distance_to_diamond_regard_to_teleport(enemy_bot, diamond, board):
-                        is_this_bot_nearest = False
-            if is_this_bot_nearest:
-                return diamond.position
+        # put all nearest diamonds to each bot to a set
+        nearest_diamond_list = list()
+        for bot in enemy_bot_list:
+            nearest_diamond_list.append(self.find_nearest_diamond_regard_to_teleport(bot, diamond_list, board))
 
+        # pop all those diamonds from the list
+        for diamond in nearest_diamond_list:
+            if diamond in diamond_list:
+                diamond_list.remove(diamond)
+
+        # move to the nearest diamond from the remaining list
+        best_diamond = self.find_nearest_diamond_regard_to_teleport(my_bot, diamond_list, board)
+        if best_diamond:
+            return best_diamond.position
 
         # if no suitable diamond left, return to base
         return my_bot.properties.base
@@ -210,10 +198,23 @@ class KodokSehat(BaseLogic):
         delta_x = 0
         delta_y = 0
 
-        # check if we can go to base, if yes, go to base
-        if board_bot.position.x < base_position.x < dest.x or dest.x < base_position.x < board_bot.position.x or board_bot.position.y < base_position.y < dest.y or dest.y < base_position.y < board_bot.position.y:
+        # check all 4 quadrant
+        # quadrant 1
+        if board_bot.position.x < base_position.x < dest.x and board_bot.position.y < base_position.y < dest.y:
             delta_x = base_position.x - board_bot.position.x
-            delta_y = base_position.y - board_bot.position.y            
+            delta_y = base_position.y - board_bot.position.y
+        # quadrant 2
+        elif dest.x < base_position.x < board_bot.position.x and board_bot.position.y < base_position.y < dest.y:
+            delta_x = base_position.x - board_bot.position.x
+            delta_y = base_position.y - board_bot.position.y
+        # quadrant 3
+        elif dest.x < base_position.x < board_bot.position.x and dest.y < base_position.y < board_bot.position.y:
+            delta_x = base_position.x - board_bot.position.x
+            delta_y = base_position.y - board_bot.position.y
+        # quadrant 4
+        elif board_bot.position.x < base_position.x < dest.x and dest.y < base_position.y < board_bot.position.y:
+            delta_x = base_position.x - board_bot.position.x
+            delta_y = base_position.y - board_bot.position.y
         else:
             delta_x = dest.x - board_bot.position.x
             delta_y = dest.y - board_bot.position.y
@@ -227,11 +228,50 @@ class KodokSehat(BaseLogic):
         
         return direction
     
+    def move_towards_through_nearest_diamond(self, board_bot: GameObject, board: Board, dest: Position) -> Tuple[int, int]:
+        nearest_diamond = self.find_nearest_diamond(board_bot, board.diamonds, board)
+        diamond_position: Position
+        if nearest_diamond:
+            diamond_position = nearest_diamond.position
+        else:
+            return self.move_towards(board_bot, dest)
+        delta_x = 0
+        delta_y = 0
 
+        # check all 4 quadrant
+        # quadrant 1
+        if board_bot.position.x < diamond_position.x < dest.x and board_bot.position.y < diamond_position.y < dest.y:
+            delta_x = diamond_position.x - board_bot.position.x
+            delta_y = diamond_position.y - board_bot.position.y
+        # quadrant 2
+        elif dest.x < diamond_position.x < board_bot.position.x and board_bot.position.y < diamond_position.y < dest.y:
+            delta_x = diamond_position.x - board_bot.position.x
+            delta_y = diamond_position.y - board_bot.position.y
+        # quadrant 3
+        elif dest.x < diamond_position.x < board_bot.position.x and dest.y < diamond_position.y < board_bot.position.y:
+            delta_x = diamond_position.x - board_bot.position.x
+            delta_y = diamond_position.y - board_bot.position.y
+        # quadrant 4
+        elif board_bot.position.x < diamond_position.x < dest.x and dest.y < diamond_position.y < board_bot.position.y:
+            delta_x = diamond_position.x - board_bot.position.x
+            delta_y = diamond_position.y - board_bot.position.y
+        else:
+            return self.move_towards(board_bot, dest)
+        
+        direction = (0, 0)
+
+        if abs(delta_x) > abs(delta_y):
+            direction = (1 if delta_x > 0 else -1, 0)
+        else:
+            direction = (0, 1 if delta_y > 0 else -1)            
+        
+        return direction
+
+    
     # find the time needed to go to base, also handle teleport
     # time_needed = (distance*time_each_step + bias) * 1000
     def miliseconds_to_base(self, board_bot: GameObject, board: Board) -> int:
-        bias = 2
+        bias = 3
         time_each_step = 1
         base_position = board_bot.properties.base
         distance = self.distance(board_bot.position, base_position)
@@ -256,19 +296,3 @@ class KodokSehat(BaseLogic):
         distance = self.distance(bot.position, base_position)
         return distance == 1 or distance == 2
     
-    def distance_to_diamond_regard_to_teleport(self, bot: GameObject, diamond: GameObject, board: Board) -> int:
-        distance_to_diamond = self.distance(diamond.position, bot.position)
-        teleporter1, teleporter2 = self.get_both_teleporter(board)
-        if teleporter1 and teleporter2:
-            distance_to_teleport1 = self.distance(bot.position, teleporter1.position)
-            distance_to_teleport2 = self.distance(bot.position, teleporter2.position)
-            distance_from_teleport1_to_diamond = self.distance(teleporter1.position, diamond.position)
-            distance_from_teleport2_to_diamond = self.distance(teleporter2.position, diamond.position)
-            
-            distance_by_teleporting = min(
-                distance_to_teleport1 + distance_from_teleport2_to_diamond,
-                distance_to_teleport2 + distance_from_teleport1_to_diamond
-            )
-            return min(distance_to_diamond, distance_by_teleporting)
-
-        return distance_to_diamond

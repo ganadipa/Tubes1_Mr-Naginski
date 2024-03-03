@@ -13,6 +13,7 @@ from game.logic.kodok_ganteng import KodokGanteng
 from game.logic.kodok_tua import KodokTua
 from game.logic.kodok_putih import KodokPutih
 from game.logic.kodok_sehat import KodokSehat
+from game.logic.kodok_mahal import KodokMahal
 from game.logic.weighted_area import WeightedArea
 
 
@@ -20,7 +21,7 @@ from game.logic.weighted_area import WeightedArea
 init()
 BASE_URL = "http://localhost:3000/api"
 # BASE_URL = "http://10.5.108.251:3000/api"
-DEFAULT_BOARD_ID = 3
+DEFAULT_BOARD_ID = 1
 CONTROLLERS = {
     "Random": RandomLogic,
     "gana": Bot1,
@@ -33,6 +34,7 @@ CONTROLLERS = {
     "Tua": KodokTua,
     "Putih": KodokPutih,
     "Sehat": KodokSehat,
+    "Mahal": KodokMahal,
 }
 
 ###############################################################################
