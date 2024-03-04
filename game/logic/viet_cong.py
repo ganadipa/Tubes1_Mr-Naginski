@@ -4,9 +4,16 @@ from game.logic.base import BaseLogic
 from game.models import GameObject, Board, Position
 
 class VietCong(BaseLogic):
+
+    """
+    Only calculate area of certain radius from base,
+    every turn move to tile with the minimum average distance from diamonds within constrained area,
+    will go to diamond if within 2 tiles away,
+    will go to base if within 2 tiles away and have 3 or more diamonds
+    """
     
     def __init__(self) :
-        self.limit = 7
+        self.limit = 9
 
     def next_move(self, board_bot: GameObject, board: Board):
 
@@ -27,7 +34,7 @@ class VietCong(BaseLogic):
             best_two_tile_away_diamond = min(diamonds_within_two, key=lambda diamond: self.calculate_tile_avg_diamond_distance(diamond.position, constrained_diamonds))
             return self.move_towards_with_teleporter(best_two_tile_away_diamond.position)
         
-        if (self.my_bot.properties.diamonds == self.my_bot.properties.inventory_size) :
+        if (self.my_bot.properties.diamonds == self.my_bot.properties.inventory_size - 1) :
             return self.move_towards_base()
         elif (self.distance_with_teleporter(self.my_bot.position, self.my_bot.properties.base) <= 2 and self.my_bot.properties.diamonds >= 3) :
             return self.move_towards_base()
@@ -138,13 +145,14 @@ class VietCong(BaseLogic):
     def get_all_diamonds_within_limit(self) :
         diamonds = self.board.diamonds
         
-        return list(filter(lambda x: self.distance_with_teleporter(x.position, self.my_bot.properties.base) <= self.limit + 2, diamonds))
+        return list(filter(lambda x: self.distance_with_teleporter(x.position, self.my_bot.properties.base) <= self.limit, diamonds))
     
+    # Calculate avg diamond distance to tile from list of diamonds
     def calculate_tile_avg_diamond_distance(self, tile: Position, diamonds : list[GameObject]) :
         total_distance = 0
 
         for diamond in diamonds :
-            total_distance += self.distance_with_teleporter(diamond.position, tile)*diamond.properties.points
+            total_distance += self.distance_with_teleporter(diamond.position, tile)/diamond.properties.points
 
         return total_distance/len(diamonds)
     
@@ -157,5 +165,6 @@ class VietCong(BaseLogic):
 
         return min(tiles, key=lambda x: self.calculate_tile_avg_diamond_distance(x, diamonds))
     
+    # Diamonds within n distance from the player
     def diamonds_within_n(self, n : int, diamonds: list[GameObject]) :
         return list(filter(lambda diamond: self.distance_with_teleporter(self.my_bot.position, diamond.position) <= n, diamonds))
