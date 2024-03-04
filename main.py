@@ -27,7 +27,14 @@ CONTROLLERS = {
     "gana": Bot1,
     "Naive": NaiveLogic,
     "Naive2": Naive2Logic,
-    "Naive3": Naive3Logic
+    "Naive3": Naive3Logic,
+    "Naive4" : Naive4Logic,
+    "Kodok" : KodokGanteng,
+    "Tua" : KodokTua,
+    "Putih" : KodokPutih,
+    "Sehat" : KodokSehat,
+    "Mahal" : KodokMahal,
+    "VietCong" : VietCong
 }
 
 ###############################################################################
