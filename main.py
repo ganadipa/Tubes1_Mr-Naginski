@@ -15,7 +15,7 @@ from game.logic.kodok_putih import KodokPutih
 from game.logic.kodok_sehat import KodokSehat
 from game.logic.kodok_mahal import KodokMahal
 from game.logic.weighted_area import WeightedArea
-
+from game.logic.viet_cong import VietCong
 
 
 init()
@@ -27,14 +27,7 @@ CONTROLLERS = {
     "gana": Bot1,
     "Naive": NaiveLogic,
     "Naive2": Naive2Logic,
-    "Naive3": Naive3Logic,
-    "Naive4": Naive4Logic,
-    "Kodok": KodokGanteng,
-    "Area": WeightedArea,
-    "Tua": KodokTua,
-    "Putih": KodokPutih,
-    "Sehat": KodokSehat,
-    "Mahal": KodokMahal,
+    "Naive3": Naive3Logic
 }
 
 ###############################################################################

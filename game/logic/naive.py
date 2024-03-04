@@ -191,6 +191,7 @@ class Naive2Logic(BaseLogic):
                     teleports[1].y, teleports[1].x)
 
     def next_move(self, board_bot: GameObject, board: Board):
+        print(board.bots)
         self.current_position = board_bot.position
         self.goal_position: Optional[Position] = None
         self.possible_directions = list(filter(lambda t: board.is_valid_move(
