@@ -10,6 +10,7 @@ class VietCong(BaseLogic):
     every turn move to tile with the minimum average distance from diamonds within constrained area,
     will go to diamond if within 2 tiles away,
     will go to base if within 2 tiles away and have 3 or more diamonds
+    will go to base if diamond in inventory is 4 or greater
     """
     
     def __init__(self) :
@@ -28,16 +29,30 @@ class VietCong(BaseLogic):
         diamonds_within_two = list(filter(lambda diamond : self.my_bot.properties.diamonds + diamond.properties.points < self.my_bot.properties.inventory_size, diamonds_within_two))
 
         if len(diamonds_within_one) > 0:
+            
+            for diamond in diamonds_within_one :
+                if (diamond.properties.points == 2) :
+                    return self.move_towards_with_teleporter(diamond.position)
+                
             best_one_tile_away_diamond = min(diamonds_within_one, key=lambda diamond: self.calculate_tile_avg_diamond_distance(diamond.position, constrained_diamonds))
             return self.move_towards_with_teleporter(best_one_tile_away_diamond.position)
+        
         elif len(diamonds_within_two) > 0:
+
+            for diamond in diamonds_within_two :
+                if (diamond.properties.points == 2) :
+                    return self.move_towards_with_teleporter(diamond.position)
+                
             best_two_tile_away_diamond = min(diamonds_within_two, key=lambda diamond: self.calculate_tile_avg_diamond_distance(diamond.position, constrained_diamonds))
             return self.move_towards_with_teleporter(best_two_tile_away_diamond.position)
         
-        if (self.my_bot.properties.diamonds == self.my_bot.properties.inventory_size - 1) :
+        if (self.my_bot.properties.diamonds >= self.my_bot.properties.inventory_size - 1) :
             return self.move_towards_base()
         elif (self.distance_with_teleporter(self.my_bot.position, self.my_bot.properties.base) <= 2 and self.my_bot.properties.diamonds >= 3) :
             return self.move_towards_base()
+        
+        if (len(constrained_diamonds) == 0) :
+            return self.move_towards_center()
         
         best_avg_tile = self.calculate_tile_with_minimum_avg_diamond_distance_around_tile(self.my_bot.position, constrained_diamonds)
         return self.move_towards_with_teleporter(best_avg_tile)
@@ -114,6 +129,9 @@ class VietCong(BaseLogic):
     # Move to base
     def move_towards_base(self) -> Tuple[int, int]:
         return self.move_towards_with_teleporter(self.my_bot.properties.base)
+    
+    def move_towards_center(self) -> Tuple[int, int]:
+        return self.move_towards_with_teleporter(Position(self.board.height//2, self.board.width//2))
     
     # Enemy Methods
 
