@@ -250,8 +250,6 @@ class KodokPutih(BaseLogic):
         self.search_optimal(props.inventory_size -
                             props.diamonds, self.bot.position, 0, 0)
 
-        self.set_goal(self.best_route[0], True)
-
         print("bot position:", self.bot.position)
         print(self.goal_evaluation)
         print("goal: ", self.goal)
