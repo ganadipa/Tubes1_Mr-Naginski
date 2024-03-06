@@ -28,13 +28,13 @@ CONTROLLERS = {
     "Naive": NaiveLogic,
     "Naive2": Naive2Logic,
     "Naive3": Naive3Logic,
-    "Naive4" : Naive4Logic,
-    "Kodok" : KodokGanteng,
-    "Tua" : KodokTua,
-    "Putih" : KodokPutih,
-    "Sehat" : KodokSehat,
-    "Mahal" : KodokMahal,
-    "VietCong" : VietCong
+    "Naive4": Naive4Logic,
+    "Kodok": KodokGanteng,
+    "Tua": KodokTua,
+    "Putih": KodokPutih,
+    "Sehat": KodokSehat,
+    "Mahal": KodokMahal,
+    "VietCong": VietCong
 }
 
 ###############################################################################
@@ -229,7 +229,7 @@ while True:
 
     # Don't spam the board more than it allows!
     # sleep(move_delay * time_factor)
-    sleep(1)
+    sleep(0.5)
 
 
 ###############################################################################

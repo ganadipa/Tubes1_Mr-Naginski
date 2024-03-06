@@ -4,7 +4,6 @@ from typing import Optional, List, Tuple
 from game.logic.base import BaseLogic
 from game.models import GameObject, Board, Position
 from math import sqrt
-from ..util import get_direction
 
 
 def get_direction(curr: Position, dest: Position, teleports: List[Position]) -> Tuple[int, int]:
@@ -136,11 +135,6 @@ class KodokPutih(BaseLogic):
             self.goal = Position(
                 goal.position.y, goal.position.x)
             min_distance = distance
-        elif (goal.type == "DiamondGameObject"):
-            if (min_distance == distance and props.points == 2):
-                self.goal = Position(
-                    goal.position.y, goal.position.x)
-                min_distance = distance
 
         # Masuk lewat teleport pertama
         distance_x = abs(teleports[0].x - pos_x) + \
@@ -152,10 +146,6 @@ class KodokPutih(BaseLogic):
             self.goal = Position(
                 teleports[0].y, teleports[0].x)
             min_distance = distance
-        elif (goal.type == "DiamondGameObject"):
-            if (min_distance == distance and props.points == 2):
-                self.goal = Position(
-                    teleports[0].y, teleports[0].x)
 
         # Masuk lewat teleport Kedua
         distance_x = abs(teleports[1].x - pos_x) + \
@@ -167,25 +157,22 @@ class KodokPutih(BaseLogic):
             self.goal = Position(
                 teleports[1].y, teleports[1].x)
             min_distance = distance
-        elif (goal.type == "DiamondGameObject"):
-            if (min_distance == distance and props.points == 2):
-                self.goal = Position(
-                    teleports[1].y, teleports[1].x)
 
     def search_optimal(self, max_diamond: int, position: Position, total_points, total_distance) -> None:
+        if (total_distance >= 15):
+            return
+
         if (max_diamond == 0 or 0 < total_distance < 15 or len(self.route) == len(self.diamonds)):
 
             last_goal_to_base = distance(
-                self.route[len(self.route) - 1], self.bot.properties.base, self.teleports)
+                self.route[len(self.route) - 1].position, self.bot.properties.base, self.teleports)
 
             evaluation = (total_points/(total_distance + last_goal_to_base))
             if (self.goal_evaluation < evaluation):
                 self.best_route = self.route.copy()
                 self.goal_evaluation = evaluation
-                obj = GameObject(99999, self.route[0], "diamond", None)
 
-                self.set_goal(obj, False)
-            return
+                self.set_goal(self.route[0], False)
 
         diamonds = self.diamonds
 
@@ -193,8 +180,8 @@ class KodokPutih(BaseLogic):
             search = True
 
             # Don't go more deep using the same diamond
-            for pos in self.route:
-                if (d.position.x == pos.x and d.position.y == pos.y):
+            for dias in self.route:
+                if (dias.id == d.id):
                     search = False
 
             if (not search):
@@ -204,7 +191,7 @@ class KodokPutih(BaseLogic):
             if (d.properties.points > max_diamond):
                 continue
 
-            self.route.append(d.position)
+            self.route.append(d)
             dist = distance(position, d.position, self.teleports)
 
             # If it is close to other bot, decrease points
@@ -228,23 +215,25 @@ class KodokPutih(BaseLogic):
         self.goal = None
         self.allowed = list(filter(lambda t: board.is_valid_move(
             self.bot.position, t[0], t[1]), [(0, 1), (1, 0), (0, -1), (-1, 0)]))
-        self.route: List[Position] = list()
+        self.route: List[GameObject] = list()
         self.goal_evaluation = float('-inf')
-        self.best_route: List[Position] = list()
-
-        # Early return
-        if (self.bot.properties.diamonds == self.bot.properties.inventory_size):
-            return get_direction(self.bot.position, self.bot.properties.base, self.teleports)
+        self.best_route: List[GameObject] = list()
 
         props = self.bot.properties
+        # Early return
+        if (self.bot.properties.diamonds == self.bot.properties.inventory_size):
+            self.set_goal(GameObject(9999, Position(
+                props.base.y, props.base.x), "Base", None), True)
+            return get_direction(self.bot.position, self.bot.properties.base, self.teleports)
 
         # Time is up! lets go home
         if (self.bot.properties.milliseconds_left/1000 - 2.5 < distance(self.bot.position, props.base, self.teleports)):
             print("TIME TO GO TO BASE!!!")
+
             self.set_goal(GameObject(9999, Position(
                 props.base.y, props.base.x), "Base", None), True)
             return get_direction(self.bot.position,
-                                 self.bot.properties.base, self.teleports)
+                                 self.goal, self.teleports)
 
         self.other_bot: List[GameObject] = list(filter(lambda bot: bot.id !=
                                                        self.bot.id, board.bots))
@@ -254,12 +243,23 @@ class KodokPutih(BaseLogic):
             if (abs(self.bot.position.x - other.position.x) + abs(self.bot.position.y - other.position.y) <= 1):
                 if (props.milliseconds_left > other.properties.milliseconds_left):
                     continue
-                return get_direction(self.bot.position, other, self.teleports)
+                return get_direction(self.bot.position, other.position, self.teleports)
 
         self.diamonds = board.diamonds
 
         self.search_optimal(props.inventory_size -
                             props.diamonds, self.bot.position, 0, 0)
+
+        self.set_goal(self.best_route[0], True)
+
+        print("bot position:", self.bot.position)
+        print(self.goal_evaluation)
+        print("goal: ", self.goal)
+        print("with route: ")
+        for obj in self.best_route:
+            print(obj.position)
+        print(self.teleports)
+        print("==========")
 
         # Go to reset button conditionally.
         if (self.goal_evaluation > 0):
@@ -299,9 +299,10 @@ class KodokPutih(BaseLogic):
         print("It's goal is:", self.goal)
         print("With goal evaluation:", self.goal_evaluation)
         print("\n\nWith route:")
-        for pos in self.best_route:
-            print(pos)
+        for obj in self.best_route:
+            print(obj.position)
 
         print("max_depth: ", len(self.best_route))
+        print("with route: ")
 
         return get_direction(self.bot.position, self.goal, self.teleports)
