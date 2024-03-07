@@ -16,6 +16,7 @@ from game.logic.kodok_sehat import KodokSehat
 from game.logic.kodok_mahal import KodokMahal
 from game.logic.weighted_area import WeightedArea
 from game.logic.viet_cong import VietCong
+from game.logic.viet_cong_rat import VietCongRat
 
 
 init()
@@ -34,7 +35,8 @@ CONTROLLERS = {
     "Putih": KodokPutih,
     "Sehat": KodokSehat,
     "Mahal": KodokMahal,
-    "VietCong": VietCong
+    "VietCong": VietCong,
+    "Rat" : VietCongRat
 }
 
 ###############################################################################
