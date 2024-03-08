@@ -22,28 +22,29 @@ class VietCongRat(BaseLogic):
         self.board = board
         self.my_bot = board_bot
 
-        if (self.my_bot.properties.milliseconds_left//1000 <= self.distance_with_teleporter(self.my_bot.position, self.my_bot.properties.base) + 3) :
+        if (self.my_bot.properties.milliseconds_left//1000 < 2) :
+            print("Goodbye world, my journey ends here")
+
+        if (self.my_bot.properties.milliseconds_left//1000 <= self.distance_with_teleporter(self.my_bot.position, self.my_bot.properties.base) + 2) :
+            print("The sun is setting, i better get back to base, otherwise i might not see my family again")
             return self.move_towards_base()
 
         constrained_diamonds = self.get_all_diamonds_within_limit(self.limit)
+        if len(constrained_diamonds) == 0 :
+            print("The diamond around our tunnel is too sparse, let's explore further")
+            constrained_diamonds = self.get_all_diamonds_within_limit(self.limit + 2)
 
-        i = 1
-        while len(constrained_diamonds) == 0 :
-
-            if (self.my_bot.properties.diamonds >= self.my_bot.properties.inventory_size - 1) :
-                return self.move_towards_base()
-            elif (self.distance_with_teleporter(self.my_bot.position, self.my_bot.properties.base) <= 2 and self.my_bot.properties.diamonds >= 3) :
-                return self.move_towards_base()
-            
-            constrained_diamonds = self.get_all_diamonds_within_limit(self.limit + 2*i)
-
-            i += 1
-
+        if len(constrained_diamonds) == 0 :
+            print("Our home is devoid of resources, i will make my way to the center, pray that i make it back")
+            return self.move_towards_center()
+        
         if len(constrained_diamonds) == 2 :
+            print("Of these two choices i'll take the closer one")
             return self.move_towards_with_teleporter(min(constrained_diamonds, key= lambda diamond: self.distance_with_teleporter(self.my_bot.position, diamond.position)).position)
 
-        diamonds_within_one = self.diamonds_within_n(1, constrained_diamonds)
-        diamonds_within_two = self.diamonds_within_n(2, constrained_diamonds)
+        all_diamonds = self.board.diamonds
+        diamonds_within_one = self.diamonds_within_n(1, all_diamonds)
+        diamonds_within_two = self.diamonds_within_n(2, all_diamonds)
         diamonds_within_one = list(filter(lambda diamond : self.my_bot.properties.diamonds + diamond.properties.points < self.my_bot.properties.inventory_size, diamonds_within_one))
         diamonds_within_two = list(filter(lambda diamond : self.my_bot.properties.diamonds + diamond.properties.points < self.my_bot.properties.inventory_size, diamonds_within_two))
 
@@ -51,28 +52,36 @@ class VietCongRat(BaseLogic):
             
             for diamond in diamonds_within_one :
                 if (diamond.properties.points == 2) :
+                    print("I'll go for the diamond worth two that is next to me")
                     return self.move_towards_with_teleporter(diamond.position)
                 
             best_one_tile_away_diamond = min(diamonds_within_one, key=lambda diamond: self.calculate_tile_avg_diamond_distance(diamond.position, constrained_diamonds))
+            print("I'll go for this diamond next to me")
             return self.move_towards_with_teleporter(best_one_tile_away_diamond.position)
         
         elif len(diamonds_within_two) > 0:
 
             for diamond in diamonds_within_two :
                 if (diamond.properties.points == 2) :
+                    print("I'll go for the diamond worth two close to me")
                     return self.move_towards_with_teleporter(diamond.position)
                 
             best_two_tile_away_diamond = min(diamonds_within_two, key=lambda diamond: self.calculate_tile_avg_diamond_distance(diamond.position, constrained_diamonds))
+            print("I'll go for this diamond close to me")
             return self.move_towards_with_teleporter(best_two_tile_away_diamond.position)
         
         if (self.my_bot.properties.diamonds >= self.my_bot.properties.inventory_size - 1) :
+            print("My inventory is full, i better store the spoils of war")
             return self.move_towards_base()
         elif (self.distance_with_teleporter(self.my_bot.position, self.my_bot.properties.base) <= 2 and self.my_bot.properties.diamonds >= 3) :
+            print("I'm close to base and i have some diamonds to help my family buy food")
             return self.move_towards_base()
         elif (self.distance_with_teleporter(self.my_bot.position, self.my_bot.properties.base) <= 1 and self.my_bot.properties.diamonds >= 1) :
+            print("It's not much but i guess i'll store this diamond to my base")
             return self.move_towards_base()
         
         best_avg_tile = self.calculate_tile_with_minimum_avg_diamond_distance_around_tile(self.my_bot.position, constrained_diamonds)
+        print(f"According to my analysis i should head to {best_avg_tile}")
         return self.move_towards_with_teleporter(best_avg_tile)
     
     # Get telebroter
@@ -139,8 +148,10 @@ class VietCongRat(BaseLogic):
         my_pos = self.my_bot.position
 
         if (self.distance_with_teleporter(my_pos, dest) == self.distance(my_pos, dest)) :
+            print("Straight forward is the shortest way")
             return self.move_towards(dest)
-        else :
+        elif ((self.distance_with_teleporter(my_pos, dest) < self.distance(my_pos, dest))) :
+            print("Let's move to the closer teleporter")
             closer_tele = self.get_closer_tele()
             return self.move_towards(closer_tele.position)
         
