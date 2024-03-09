@@ -1,0 +1,5 @@
+token/
+.venv/
+.token*
+**/__pycache__/**
+.vscode/*

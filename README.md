@@ -1,3 +1,14 @@
+<h1 align="center">Tugas Besar 1 IF2211 Strategi Algoritma</h1>
+
+This repository contains application of Greedy Algoritma for a game called Diamonds.
+
+# ✨ Members
+- 13522066 Nyoman Ganadipa
+- 13522084 Dhafin Fawwaz Ikramullah
+- 13522089 Abdul Rafi Radityo Hutomo
+
+The most efficient bot in this project are `src/logic/viet_cong_rat.py`, `src/logic/unused/kodokmahal.py`, and `src/logic/unused/kodokputih.py` with `viet_cong_rat.py` being the best overall.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # 💎 Etimo Diamonds 2
